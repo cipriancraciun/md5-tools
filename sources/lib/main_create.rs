@@ -604,7 +604,9 @@ pub fn main () -> (Result<(), io::Error>) {
 	let mut _output_file = _sink.done () ?;
 	
 	if let Some ((ref _output_path, ref _output_path_tmp)) = _output_path_and_tmp {
-		_output_file.set_permissions (fs::Permissions::from_mode (0o400)) ?;
+		if let Err (_error) = _output_file.set_permissions (fs::Permissions::from_mode (0o400)) {
+			eprintln! ("[ii] [abfed219]  failed making read-only `{}`:  {};  ignoring!", _output_path_tmp.to_string_lossy (), _error);
+		}
 		_output_file.sync_all () ?;
 		fs::rename (_output_path_tmp, _output_path) ?;
 	}
