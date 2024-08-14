@@ -62,8 +62,8 @@ func main () () {
 	} else {
 		panic (fmt.Sprintf ("[04d78872]  invalid parallelism (parse failed) `%s`:  %s", os.Args[6], _error))
 	}
-	if (_parallelism < 1) || (_parallelism > 128) {
-		panic (fmt.Sprintf ("[29f6c5c4]  invalid parallelism (must be between 1 and 128) `%s`", _parallelism))
+	if (_parallelism < 1) || (_parallelism > 512) {
+		panic (fmt.Sprintf ("[29f6c5c4]  invalid parallelism (must be between 1 and 512) `%s`", _parallelism))
 	}
 	
 	
