@@ -54,6 +54,8 @@ func main () () {
 		panic (fmt.Sprintf ("[ef8c8ebc]  invalid target levels (must be between 0 and 2) `%s`", _targetLevels))
 	}
 	
+	_targetSync := false
+	
 	_parallelism := 16
 	if _value, _error := strconv.ParseUint (os.Args[6], 10, 16); _error == nil {
 		if _value != 0 {
@@ -112,7 +114,7 @@ func main () () {
 				_hash := _hash_and_path[0]
 				_path := _hash_and_path[1]
 //				fmt.Fprintf (os.Stderr, "[dd] [12ecbee9]  worker copying...\n")
-				copy (_hash, _path, _sourcePath, _targetPath, _targetSuffix, _targetLevels)
+				copy (_hash, _path, _sourcePath, _targetPath, _targetSuffix, _targetLevels, _targetSync)
 //				fmt.Fprintf (os.Stderr, "[dd] [c699ec13]  worker dequeueing...\n")
 			}
 			_workersDone.Done ()
@@ -191,7 +193,7 @@ func main () () {
 
 
 
-func copy (_hash string, _path string, _sourcePath string, _targetPath string, _targetSuffix string, _targetLevels int) () {
+func copy (_hash string, _path string, _sourcePath string, _targetPath string, _targetSuffix string, _targetLevels int, _targetSync bool) () {
 	
 	// NOTE:  Compute source and target paths...
 	
@@ -333,8 +335,10 @@ func copy (_hash string, _path string, _sourcePath string, _targetPath string, _
 	if _error := _targetStreamTmp_1.Chmod (0400); _error != nil {
 		panic (fmt.Sprintf ("[b3be47d6]  unexpected error:  %s", _error))
 	}
-	if _error := _targetStreamTmp_1.Sync (); _error != nil {
-		panic (fmt.Sprintf ("[8bd8f281]  unexpected error:  %s", _error))
+	if _targetSync {
+		if _error := _targetStreamTmp_1.Sync (); _error != nil {
+			panic (fmt.Sprintf ("[8bd8f281]  unexpected error:  %s", _error))
+		}
 	}
 	
 	
@@ -436,10 +440,14 @@ func copy (_hash string, _path string, _sourcePath string, _targetPath string, _
 	
 	// NOTE:  Sync folders...
 	
-	{
+	if _targetSync {
 		_folderPath := _targetFile
 		for {
-			_folderPath = path.Dir (_folderPath)
+			if _parent := path.Dir (_folderPath); _parent != _folderPath {
+				_folderPath = _parent
+			} else {
+				break
+			}
 			if _folderStream, _error := os.OpenFile (_folderPath, os.O_RDONLY | syscall.O_DIRECTORY, 0); _error == nil {
 				if _error := _folderStream.Sync (); _error != nil {
 					panic (fmt.Sprintf ("[2e17ce7d]  unexpected error:  %s", _error))
